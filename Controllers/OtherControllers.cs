@@ -480,10 +480,11 @@ public class DashboardController(AppDbContext db) : ControllerBase
 }
 
 // ─── UPLOAD ──────────────────────────────────────────────────────────────────
+// ─── UPLOAD ──────────────────────────────────────────────────────────────────
 [ApiController]
 [Route("api/upload")]
 [Authorize(Roles = "admin")]
-public class UploadController(IWebHostEnvironment env) : ControllerBase
+public class UploadController(IConfiguration config) : ControllerBase
 {
     private const long MaxFileSize = 5 * 1024 * 1024;
 
@@ -501,16 +502,22 @@ public class UploadController(IWebHostEnvironment env) : ControllerBase
         if (!allowed.Contains(ext))
             return BadRequest(new { message = "نوع الملف غير مسموح" });
 
-        var uploads = Path.Combine(env.WebRootPath ?? "wwwroot", "uploads");
-        Directory.CreateDirectory(uploads);
+        var cloudinary = new CloudinaryDotNet.Cloudinary(new CloudinaryDotNet.Account(
+            config["CLOUDINARY_CLOUD_NAME"],
+            config["CLOUDINARY_API_KEY"],
+            config["CLOUDINARY_API_SECRET"]
+        ));
 
-        var fileName = $"{Guid.NewGuid()}{ext}";
-        var filePath = Path.Combine(uploads, fileName);
+        await using var stream = file.OpenReadStream();
+        var uploadResult = await cloudinary.UploadAsync(new CloudinaryDotNet.Actions.ImageUploadParams
+        {
+            File = new CloudinaryDotNet.FileDescription(file.FileName, stream),
+            Folder = "smartbayt"
+        });
 
-        await using var stream = System.IO.File.Create(filePath);
-        await file.CopyToAsync(stream);
+        if (uploadResult.Error is not null)
+            return BadRequest(new { message = uploadResult.Error.Message });
 
-        var url = $"{Request.Scheme}://{Request.Host}/uploads/{fileName}";
-        return Ok(new { url });
+        return Ok(new { url = uploadResult.SecureUrl.ToString() });
     }
 }
