@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace SmartBayt.DTOs;
 
@@ -76,7 +76,8 @@ public record CategoryResponse(
     string Slug,
     string? Icon,
     int DisplayOrder,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    int ProductCount
 );
 
 // ─── ORDER ───────────────────────────────────────────────
