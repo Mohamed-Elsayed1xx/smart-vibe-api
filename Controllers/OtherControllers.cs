@@ -504,10 +504,14 @@ public class UploadController(IConfiguration config) : ControllerBase
         if (!allowed.Contains(ext))
             return BadRequest(new { message = "نوع الملف غير مسموح" });
 
+        var cloudName = config["Cloudinary__CloudName"] ?? config["CLOUDINARY_CLOUD_NAME"];
+        var apiKey    = config["Cloudinary__ApiKey"]    ?? config["CLOUDINARY_API_KEY"];
+        var apiSecret = config["Cloudinary__ApiSecret"] ?? config["CLOUDINARY_API_SECRET"];
+
         var cloudinary = new CloudinaryDotNet.Cloudinary(new CloudinaryDotNet.Account(
-            config["CLOUDINARY_CLOUD_NAME"],
-            config["CLOUDINARY_API_KEY"],
-            config["CLOUDINARY_API_SECRET"]
+            cloudName,
+            apiKey,
+            apiSecret
         ));
 
         await using var stream = file.OpenReadStream();
