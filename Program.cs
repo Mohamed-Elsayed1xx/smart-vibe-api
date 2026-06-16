@@ -48,12 +48,21 @@ builder.Services.AddAuthorization();
 
 // ─── CORS ─────────────────────────────────────────────────
 var frontendUrl = Environment.GetEnvironmentVariable("FRONTEND_URL")
+    ?? Environment.GetEnvironmentVariable("Frontend__Url")
     ?? builder.Configuration["Frontend:Url"]
     ?? "http://localhost:5173";
 
 builder.Services.AddCors(opt =>
     opt.AddPolicy("Frontend", p => p
-        .WithOrigins(frontendUrl, "http://localhost:5173", "http://localhost:3000", "http://localhost:8080")
+        .SetIsOriginAllowed(origin =>
+        {
+            if (string.IsNullOrEmpty(origin)) return false;
+            if (origin == frontendUrl) return true;
+            if (origin.StartsWith("http://localhost:")) return true;
+            if (origin.EndsWith(".vercel.app")) return true;
+            if (origin.EndsWith(".railway.app")) return true;
+            return false;
+        })
         .AllowAnyHeader()
         .AllowAnyMethod()
     )
