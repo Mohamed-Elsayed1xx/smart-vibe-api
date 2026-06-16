@@ -34,7 +34,7 @@ public class AuthController(AppDbContext db, JwtHelper jwt) : ControllerBase
         db.Users.Add(user);
         await db.SaveChangesAsync();
 
-        return Ok(new AuthResponse(jwt.GenerateToken(user), user.Id.ToString(), user.Email, user.FullName, user.Role));
+        return Ok(new AuthResponse(jwt.GenerateToken(user), user.Id.ToString(), user.Email, user.FullName, user.Role, user.AvatarUrl));
     }
 
     [HttpPost("login")]
@@ -44,7 +44,7 @@ public class AuthController(AppDbContext db, JwtHelper jwt) : ControllerBase
         if (user is null || !BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
             return Unauthorized(new { message = "بيانات خاطئة" });
 
-        return Ok(new AuthResponse(jwt.GenerateToken(user), user.Id.ToString(), user.Email, user.FullName, user.Role));
+        return Ok(new AuthResponse(jwt.GenerateToken(user), user.Id.ToString(), user.Email, user.FullName, user.Role, user.AvatarUrl));
     }
 
     [HttpGet("me")]
@@ -54,7 +54,7 @@ public class AuthController(AppDbContext db, JwtHelper jwt) : ControllerBase
         var id = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         var user = await db.Users.FindAsync(id);
         if (user is null) return NotFound();
-        return Ok(new AuthResponse("", user.Id.ToString(), user.Email, user.FullName, user.Role));
+        return Ok(new AuthResponse("", user.Id.ToString(), user.Email, user.FullName, user.Role, user.AvatarUrl));
     }
 
     [HttpPut("profile")]
